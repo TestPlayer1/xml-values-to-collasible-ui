@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.collapsible {
+  background-color: #777;
+  color: white;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+.active, .collapsible:hover {
+  background-color: #555;
+}
+
+.collapsible:after {
+  content: '\002B';
+  color: white;
+  font-weight: bold;	
+  margin-left: 5px;
+}
+
+.active:after {
+  content: "\2212";
+}
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+
+<textarea id="textarea">
+	
+</textarea>
+
+<button id="button">
+Try
+</button>
+
+<div id="xmlTree">
+</div>
+
+<script>
+$('#button').click(function(){
+	startTree();
+	
+	var coll = $('.collapsible');
+	var i;
+	
+	for (i = 0; i < coll.length; i++) {
+	  coll[i].addEventListener("click", function() {
+		this.classList.toggle("active");
+		var content = this.nextElementSibling;
+		if (content.style.display === "block") {
+		  content.style.display = "none";
+		} else {
+		  content.style.display = "block";
+		}
+	  });
+	}
+});
+var less = "<";
+var greater = ">";
+var close = "/";
+var preselect = 0;
+
+
+
+
+
+function parsedString()
+{
+	var value = document.getElementById("textarea").value;
+    return new DOMParser().parseFromString(value, "text/xml");
+}
+function startTree(xmlTree)
+{
+    // get the root node
+    var parent = parsedString().documentElement;
+        
+    // get the root name
+    str = parent.nodeName;
+     
+    // create a new list
+    var newList = $('<div>');
+     
+    // create a new list item
+    var listItem = $('<li id="root">', {
+        class: parent.nodeName
+    }).html('<button type="button" class="collapsible">'+ str +'</button>');
+	//}).text(less + str + greater);
+ 
+    // if root node has child nodes, traverse
+    if (parent.childNodes.length > 0)
+    {
+        listItem = setXMLTree(parent.childNodes, listItem)
+    }
+     
+    listItem.appendTo(newList);
+
+	$('#xmlTree').html(newList);
+	//newList.appendTo('#xmlTree');
+
+}
+ 
+function setXMLTree(parent, listItem)
+{   
+    // create new list and append to root li
+    var newList = $('<ul>');
+    //newList.appendTo(listItem); 
+	
+	//listItem.appendTo(newList);
+	var tempDiv = $("<div>", {"class": "content"});
+	
+	newList.appendTo(tempDiv)
+	tempDiv.appendTo(listItem)
+     
+    // get child nodes of current parent
+    var children = parent;
+    for (var child = 0; child < parent.length; child++)
+    {
+        var tempChild = children[child];
+        // Skip one iteration if child is invalid
+        if (tempChild.nodeType === Node.TEXT_NODE || tempChild.nodeType === Node.COMMENT_NODE || tempChild === null)
+        {
+            continue;
+        }
+        else
+        {                   
+            // get the node name
+            str = tempChild.nodeName;
+             
+            // check if the node has attributes
+            var c = tempChild.hasAttributes();
+            if (c === true)
+            {
+                // get node attributes and append to string
+                var attributes = tempChild.attributes;
+                for (var i = 0; i < attributes.length; i++)
+                {
+                    str += " " + attributes[i].name + '="' + attributes[i].value + '"';
+                }
+            }
+             
+            // if the current child node has more that one child, recursively create new
+            // child list, with the current child node as parent.
+            if (tempChild.childNodes.length > 1)
+            {
+                var newParent = tempChild;
+                str = newParent.nodeName;
+                 
+                // create new list item but don't append to the new unordered list
+                // until all child nodes have been traversed.
+                var newItem = $('<p>', {
+                    class: str
+                }).html('<button type="button" class="collapsible">'+ str +'</button>');
+				//}).text(less + str + greater);
+                 
+                newItem = setXMLTree(newParent.childNodes, newItem);
+                newItem.appendTo(newList);
+            }
+            else
+            {       
+                // check if node type is undefined
+                if (typeof tempChild.childNodes[0] === 'undefined')
+                {
+                    var li = $('<p>', {
+                        class: str
+                    }).text(less + str + close + greater);
+                    li.appendTo(newList)
+                }
+                else
+                {
+                    var value = tempChild.childNodes[0].nodeValue;
+                     
+                    var li = $('<p>', {
+                        class: str
+                    //}).html('<div class="content">'+str+':'+ value +'</div>');
+					}).text(str + ":  " + value);
+                    li.appendTo(newList)
+                }   
+            }                   
+        }
+    }       
+    // return the list item
+    return listItem;
+}
+<!-- var xmlDoc; -->
+
+
+<!-- $('#button').click(function(){readXml();}); -->
+
+
+<!-- function readXml(){ -->
+	<!-- var txt = document.getElementById("textarea").value; -->
+	<!-- alert(txt); -->
+	<!-- if (window.DOMParser) { -->
+		<!-- parser=new DOMParser(); -->
+		<!-- xmlDoc=parser.parseFromString(txt,"text/xml"); -->
+	<!-- } else { // Internet Explorer -->
+		<!-- xmlDoc=new ActiveXObject("Microsoft.XMLDOM"); -->
+		<!-- xmlDoc.async=false; -->
+		<!-- xmlDoc.loadXML(txt);  -->
+	<!-- } -->
+	
+	<!-- var tags = xmlDoc.getElementsByTagName('*'); -->
+	<!-- for (var i = 0; i < tags.length; i++) { -->
+		<!-- alert(tags[i].nodeName + ' = ' + tags[i].firstChild.nodeValue); -->
+	<!-- } -->
+<!-- } -->
+</script>
+
+</body>
+</html>
